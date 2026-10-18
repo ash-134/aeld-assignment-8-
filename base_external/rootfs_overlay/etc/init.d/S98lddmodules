@@ -1,0 +1,29 @@
+#! /bin/sh
+
+case "$1" in
+    start)
+        echo "Loading AESD char driver and LDD modules..."
+        insmod /lib/modules/$(uname -r)/extra/aesdchar.ko
+        major=$(awk "\$2==\"aesdchar\" {print \$1}" /proc/devices)
+        rm -f /dev/aesdchar
+        mknod /dev/aesdchar c $major 0
+        
+        /usr/bin/scull_load
+        /usr/bin/module_load faulty
+        modprobe hello
+        ;;
+    stop)
+        echo "Unloading LDD modules and AESD char driver..."
+        rmmod hello
+        /usr/bin/module_unload faulty
+        /usr/bin/scull_unload
+        rmmod aesdchar
+        rm -f /dev/aesdchar
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0
